@@ -18,7 +18,9 @@ jobs:
       matrix:
         settings:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
-            args: '--target universal-apple-darwin'
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-20.04'
             args: ''
           - platform: 'windows-latest'
@@ -37,7 +39,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-          targets: ${{ matrix.settings.platform == 'macos-latest' && 'universal-apple-darwin,aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.settings.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.settings.platform == 'ubuntu-20.04' # This must match the platform value defined above.
@@ -52,6 +54,14 @@ jobs:
 
       - name: install frontend dependencies
         run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
+
+      - shell: bash
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        run: |
+          echo "TAURI_PRIVATE_KEY: $TAURI_PRIVATE_KEY"
+          echo "TAURI_KEY_PASSWORD: $TAURI_KEY_PASSWORD"
 
       - uses: tauri-apps/tauri-action@v0
         env:
